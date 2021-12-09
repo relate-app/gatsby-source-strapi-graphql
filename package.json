@@ -1,0 +1,19 @@
+{
+  "name": "@relate-app/gatsby-source-strapi",
+  "version": "1.0.0",
+  "description": "Source plugin for pulling documents into Gatsby-v4 from a Strapi-v4 API.",
+  "keywords": [
+    "gatsby",
+    "gatsby-plugin"
+  ],
+  "author": "Tim Brandin <tim.brandin@gmail.com>",
+  "license": "0BSD",
+  "dependencies": {
+    "@apollo/client": "^3.5.6",
+    "commonmark": "^0.30.0",
+    "cross-fetch": "^3.1.4",
+    "gatsby-source-filesystem": "^4.3.0",
+    "graphql": "^16.1.0",
+    "react": "^17.0.2"
+  }
+}
