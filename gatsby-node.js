@@ -34,16 +34,23 @@ exports.sourceNodes = async ({
   const operations = await buildQueries(pluginOptions);
   const client = getClient(pluginOptions);
   await Promise.all(operations.map(async operation => {
-    const { operationName, field, collectionType, query, syncQuery } = operation;
+    const { field, collectionType, singleType, query, syncQuery } = operation;
     try {
-      const NODE_TYPE = `Strapi${collectionType}`;
+      const NODE_TYPE = `Strapi${collectionType || singleType}`;
       const variables = {
         ...operation?.variables,
+        ...pluginOptions?.preview && operation?.variables?.publicationState && {
+          publicationState: 'PREVIEW',
+        },
         ...lastFetched && operation?.variables?.updatedAt && {
           updatedAt: new Date(lastFetched).toISOString(),
         },
+        ...pluginOptions?.locale && operation?.variables?.locale && {
+          locale: pluginOptions.locale,
+        },
       };
-      const { data, error } = await client.query({ query, variables });
+      operation.variables = variables;
+      const result = await client.query({ query, variables });
       await Promise.all([(async () => {
         if (lastFetched) {
           const { updatedAt, ...syncVariables } = variables;
@@ -55,7 +62,9 @@ exports.sourceNodes = async ({
           });
         }
       })(), (async () => {
-        await Promise.all(data?.[field.name]?.data.map(async item => {
+        const data = result?.data?.[field.name]?.data;
+        const items = data && (data instanceof Array ? data : [data]) || [];
+        await Promise.all(items.map(async item => {
           const { id, attributes } = item || {};
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
           const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };

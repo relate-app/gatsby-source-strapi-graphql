@@ -1,14 +1,14 @@
-const { getTypeMap } = require('./api');
+const { getTypesMap } = require('./api');
 const {
   filterExcludedTypes,
   getFieldType,
+  getTypeMap,
   getTypeName,
-  getCollectionType,
-  getCollectionTypes,
-  getCollectionTypeMap,
+  getEntityType,
+  getEntityTypes,
 } = require('./helpers');
 
-const getTypeDefs = (typeNames, typeMap, schema, collectionTypeMap, markdownImages) => {
+const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) => {
   const typeDefs = {};
   const foundTypes = [];
   for (let typeName of typeNames) {
@@ -26,14 +26,14 @@ const getTypeDefs = (typeNames, typeMap, schema, collectionTypeMap, markdownImag
       case 'OBJECT':
         typeDefs[type.name] = schema.buildObjectType({
           name: `Strapi${type.name}`,
-          ...collectionTypeMap[type.name] && { interfaces: ['Node'] },
+          ...entityTypeMap[type.name] && { interfaces: ['Node'] },
           fields: type.fields.filter(filterExcludedTypes).reduce((acc, field) => {
             const fieldTypeName = getTypeName(field.type);
             // Add relationship resolver referenced collections.
-            const collectionType = getCollectionType(fieldTypeName);
-            if (collectionType) {
-              if (collectionTypeMap?.[collectionType]) {
-                const typeName = `Strapi${collectionType}`;
+            const entityType = getEntityType(fieldTypeName);
+            if (entityType) {
+              if (entityTypeMap?.[entityType]) {
+                const typeName = `Strapi${entityType}`;
                 return Object.assign(acc, {
                   [field.name]: {
                     type: typeName,
@@ -120,10 +120,10 @@ const getTypeDefs = (typeNames, typeMap, schema, collectionTypeMap, markdownImag
 }
 
 module.exports = async (pluginOptions, schema, createNodeId) => {
-  const collectionTypes = getCollectionTypes(pluginOptions);
-  const collectionTypeMap = getCollectionTypeMap(collectionTypes);
-  const typeMap = await getTypeMap(pluginOptions);
+  const entityTypes = getEntityTypes(pluginOptions);
+  const entityTypeMap = getTypeMap(entityTypes);
+  const typeMap = await getTypesMap(pluginOptions);
   const markdownImages = pluginOptions?.markdownImages?.typesToParse;
-  const result = getTypeDefs(collectionTypes, typeMap, schema, collectionTypeMap, markdownImages);
+  const result = getTypeDefs(entityTypes, typeMap, schema, entityTypeMap, markdownImages);
   return Object.values(result);
 };

@@ -17,7 +17,7 @@ const getTypes = async pluginOptions => {
   return types;
 }
 
-const getTypeMap = async pluginOptions => {
+const getTypesMap = async pluginOptions => {
   const types = await getTypes(pluginOptions);
   return types.reduce((acc, type) => Object.assign(acc, { [type.name]: type }), {});
 };
@@ -25,6 +25,6 @@ const getTypeMap = async pluginOptions => {
 module.exports = {
   getSchema,
   getTypes,
-  getTypeMap,
+  getTypesMap,
   getClient,
 };

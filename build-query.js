@@ -1,13 +1,15 @@
 const { gql } = require("@apollo/client")
-const { getTypeMap } = require('./api');
+const { getTypesMap } = require('./api');
 const {
+  getEntityResponse,
   getEntityResponseCollection,
   getCollectionTypes,
-  getCollectionTypeMap,
+  getSingleTypes,
+  getTypeMap,
   filterExcludedTypes,
 } = require('./helpers');
 
-const getNodeFields = (node, typeMap, n = 0, root = false) => {
+const getNodeFields = (node, typesMap, n = 0, root = false) => {
   const max = 16;
   if (n > max) {
     return null;
@@ -28,27 +30,27 @@ const getNodeFields = (node, typeMap, n = 0, root = false) => {
           }
           if (node?.fields) {
             if (root) {
-              return node.fields.filter(filterExcludedTypes).map(child => getNodeFields(child, typeMap, n)).join(sep);
+              return node.fields.filter(filterExcludedTypes).map(child => getNodeFields(child, typesMap, n)).join(sep);
             }
-            return node.fields.filter(filterExcludedTypes).map(child => getNodeFields(child, typeMap, n));
+            return node.fields.filter(filterExcludedTypes).map(child => getNodeFields(child, typesMap, n));
           }
-          const child = typeMap?.[node?.name];
+          const child = typesMap?.[node?.name];
           if (child) {
-            return getNodeFields(child, typeMap, n);
+            return getNodeFields(child, typesMap, n);
           }
           return null;
         case 'UNION': {
-          const child = typeMap?.[node?.name];
+          const child = typesMap?.[node?.name];
           if (child) {
             return [`${dep(n)}__typename`, ...child.possibleTypes.map(possibleType => {
-              const grandchild = typeMap?.[possibleType?.name];
+              const grandchild = typesMap?.[possibleType?.name];
               if (grandchild) {
                 // Prevent circular propagation.
                 const relationship = /Entity$/.test(node?.name);
                 if (relationship) {
                   return [`${dep(n)}id`];
                 }
-                const fields = getNodeFields(grandchild, typeMap, n + 1);
+                const fields = getNodeFields(grandchild, typesMap, n + 1);
                 if (fields) {
                   return `${dep(n)}... on ${possibleType.name} {${sep}${[`${dep(n + 1)}__typename`, ...fields].join(sep)}${sep + dep(n)}}`;
                 }
@@ -58,7 +60,7 @@ const getNodeFields = (node, typeMap, n = 0, root = false) => {
           return null;
         }
         case 'ENUM': {
-          const child = typeMap?.[node?.name];
+          const child = typesMap?.[node?.name];
           if (child) {
             return [`${dep(n + 1)}__typename`, ...child.enumValues.map(({ name }) =>
               `${dep(n + 1)}${name}`,
@@ -75,16 +77,16 @@ const getNodeFields = (node, typeMap, n = 0, root = false) => {
         case 'ENUM':
           return `${dep(n)}${node.name}`;
         case 'NON_NULL':
-          return getNodeFields({ ...node, type: node.type?.ofType }, typeMap, n);
+          return getNodeFields({ ...node, type: node.type?.ofType }, typesMap, n);
         case 'OBJECT': {
-          const fields = getNodeFields(node.type, typeMap, n + 1);
+          const fields = getNodeFields(node.type, typesMap, n + 1);
           if (fields) {
             return `${dep(n)}${node.name} {${sep}${[`${dep(n + 1)}__typename`, ...fields].join(sep)}${sep + dep(n)}}`;
           }
           break;
         }
         case 'LIST':
-          const fields = getNodeFields(node.type?.ofType, typeMap, n + 1);
+          const fields = getNodeFields(node.type?.ofType, typesMap, n + 1);
           if (typeof fields === 'string') {
             return `${dep(n)}${node.name} {${sep}${fields}${sep + dep(n)}}`;
           } else if (fields?.length) {
@@ -99,35 +101,36 @@ const getNodeFields = (node, typeMap, n = 0, root = false) => {
   return null;
 };
 
-const buildQueries = (operations, typeMap) => {
+const buildQueries = (operations, typesMap) => {
   return operations.map(operation => {
-    const operationName = `${operation.collectionType}Query`;
+    const isCollectionType = operation?.collectionType;
+    const operationName = `${operation.collectionType || operation.singleType}Query`;
     const publicationState = Boolean(operation.field.args.find(arg => arg.name === 'publicationState'));
     const locale = Boolean(operation.field.args.find(arg => arg.name === 'locale'));
-    const filterInputType = typeMap?.[operation.field.args.find(arg => arg.name === 'filters')?.type?.name];
+    const filterInputType = typesMap?.[operation.field.args.find(arg => arg.name === 'filters')?.type?.name];
     const updatedAt = Boolean((filterInputType?.inputFields || []).find(input => input.name === 'updatedAt'));
     const varDef = [
-      '$pagination: PaginationArg',
+      isCollectionType && '$pagination: PaginationArg',
       publicationState && '$publicationState: PublicationState',
       locale && '$locale: I18NLocaleCode',
       updatedAt && '$updatedAt: DateTime',
-    ].filter(n => Boolean(n)).join(' ');
+    ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const varSet = [
-      'pagination: $pagination',
+      isCollectionType && 'pagination: $pagination',
       publicationState && 'publicationState: $publicationState',
       locale && 'locale: $locale',
       updatedAt && 'filters: { updatedAt: { gt: $updatedAt } }',
-    ].filter(n => Boolean(n)).join(' ');
+    ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const variables = {
-      pagination: { start: 0, limit: 1000 },
+      ...isCollectionType && { pagination: { start: 0, limit: 1000 } },
       ...publicationState && { publicationState: 'LIVE' },
       ...locale && { locale: 'all' },
       ...updatedAt && { updatedAt: "1990-01-01T00:00:00.000Z" },
     };
-    const meta = `meta { pagination { total } }`;
-    const data = `__typename data { __typename id attributes { __typename ${operation.query} } } ${meta}`;
-    const query = gql`query ${operationName}(${varDef}) { ${operation.field.name}(${varSet}) { ${data} } }`;
-    const syncQuery = gql`query ${operationName}(${varDef}) { ${operation.field.name}(${varSet}) { data { id } ${meta} } }`;
+    const meta = isCollectionType ? ` meta { pagination { total } }` : '';
+    const data = `__typename data { __typename id attributes { __typename ${operation.query} } }${meta}`;
+    const query = gql`query ${operationName}${varDef} { ${operation.field.name}${varSet} { ${data} } }`;
+    const syncQuery = gql`query ${operationName}${varDef} { ${operation.field.name}${varSet} { data { id }${meta} } }`;
     return {
       ...operation,
       operationName,
@@ -138,16 +141,25 @@ const buildQueries = (operations, typeMap) => {
   });
 };
 
-const getQueryFields = (collectionTypeMap, typeMap) => {
-  const Query = typeMap?.Query;
+const getQueryFields = (singleTypes, collectionTypeMap, typesMap) => {
+  const Query = typesMap?.Query;
   return Query.fields.reduce((acc, field) => {
+    const singleType = getEntityResponse(field.type.name);
     const collectionType = getEntityResponseCollection(field.type.name);
     if (collectionTypeMap?.[collectionType]) {
-      const type = typeMap?.[collectionType];
+      const type = typesMap?.[collectionType];
       acc.push({
         field,
-        query: getNodeFields(type, typeMap, 4, true),
+        query: getNodeFields(type, typesMap, 4, true),
         collectionType,
+      });
+    }
+    if (singleTypes?.[singleType]) {
+      const type = typesMap?.[singleType];
+      acc.push({
+        field,
+        query: getNodeFields(type, typesMap, 4, true),
+        singleType,
       });
     }
     return acc;
@@ -156,8 +168,10 @@ const getQueryFields = (collectionTypeMap, typeMap) => {
 
 module.exports = async pluginOptions => {
   const collectionTypes = getCollectionTypes(pluginOptions);
-  const collectionTypeMap = getCollectionTypeMap(collectionTypes);
-  const typeMap = await getTypeMap(pluginOptions);
-  const fields = getQueryFields(collectionTypeMap, typeMap);
-  return buildQueries(fields, typeMap);
+  const collectionTypeMap = getTypeMap(collectionTypes);
+  const singleTypes = getSingleTypes(pluginOptions);
+  const singleTypeMap = getTypeMap(singleTypes);
+  const typesMap = await getTypesMap(pluginOptions);
+  const fields = getQueryFields(singleTypeMap, collectionTypeMap, typesMap);
+  return buildQueries(fields, typesMap);
 };

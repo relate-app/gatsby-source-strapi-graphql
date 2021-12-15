@@ -66,6 +66,9 @@ const getTypeName = type => {
   }
 }
 
+const getEntityType = name =>
+  name.match(/(.*)(?:EntityResponse|EntityResponseCollection|RelationResponseCollection)$/)?.[1];
+
 const getEntityResponse = name =>
   name.match(/(.*)(?:EntityResponse)$/)?.[1];
 
@@ -75,10 +78,16 @@ const getEntityResponseCollection = name =>
 const getCollectionType = name =>
   name.match(/(.*)(?:EntityResponse|RelationResponseCollection)$/)?.[1];
 
-const getCollectionTypes = ({ collectionTypes }) =>
+const getSingleTypes = ({ collectionTypes, singleTypes }) =>
+  [...singleTypes].map(formatCollectionName);
+
+const getCollectionTypes = ({ collectionTypes, singleTypes }) =>
   ['UploadFile', ...collectionTypes].map(formatCollectionName);
 
-const getCollectionTypeMap = collectionTypes =>
+const getEntityTypes = ({ collectionTypes, singleTypes }) =>
+['UploadFile', ...collectionTypes, ...singleTypes].map(formatCollectionName);
+
+const getTypeMap = collectionTypes =>
   (collectionTypes || []).reduce((ac, a) => ({ ...ac, [a]: true }), {});
 
 const reportOperationError = (reporter, operation, error) => {
@@ -87,35 +96,10 @@ const reportOperationError = (reporter, operation, error) => {
 ===== QUERY =====
 ${print(query)}
 ===== VARIABLES =====
-${JSON.stringify({ operationName, field, collectionType, variables }, null, 2)}
+${JSON.stringify(variables, null, 2)}
 ===== ERROR =====
 `;
   reporter.error(`${operationName} failed – ${error.message}\n${extra}`, error);
-};
-
-const assignNodeIds = (obj, createNodeId) => {
-  const fields = Object.keys(obj).reduce((acc, key) => {
-    let value = obj?.[key];
-    if (value?.__typename) {
-      const collectionType = getEntityResponse(value.__typename);
-      if (collectionType && value?.data?.id) {
-        const nodeId = createNodeId(`Strapi${collectionType}-${value.data.id}`);
-        value = { ...value, id: nodeId, nodeId: `Strapi${collectionType}-${value.data.id}` };
-      } else {
-        value = assignNodeIds(value, createNodeId);
-      }
-      Object.assign(acc, { [key]: value });
-    } else if (value instanceof Array) {
-      value = value.map(o => assignNodeIds(o, createNodeId));
-      Object.assign(acc, { [key]: value });
-    }
-    return acc;
-  }, {});
-
-  if (Object.keys(fields).length > 0) {
-    return { ...obj, ...fields };
-  }
-  return obj;
 };
 
 const extractFiles = text => {
@@ -198,16 +182,17 @@ const processFieldData = async (data, options) => {
 }
 
 module.exports = {
-  assignNodeIds,
   catchErrors,
   filterExcludedTypes,
-  formatCollectionName,
+  getEntityResponse,
   getEntityResponseCollection,
+  getEntityType,
+  getEntityTypes,
   getCollectionType,
   getCollectionTypes,
-  getCollectionTypeMap,
+  getSingleTypes,
+  getTypeMap,
   getFieldType,
   getTypeName,
   processFieldData,
-  reportOperationError,
 };
