@@ -7,7 +7,7 @@
   Strapi Source Plugin
 </h1>
 
-Source plugin for pulling documents into Gatsby-v4 from a Strapi-v4 API.
+Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql API.
 
 ## 🚀 Installing the plugin
 
