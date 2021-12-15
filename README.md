@@ -16,10 +16,10 @@ Source plugin for pulling documents into Gatsby-v4 from a Strapi-v4 API.
 
 ```shell
 # Using Yarn
-yarn add gatsby-source-strapi
+yarn add gatsby-source-strapi@relate-app/gatsby-source-strapi
 
 # Or using NPM
-npm install --save gatsby-source-strapi
+npm install --save gatsby-source-strapi@relate-app/gatsby-source-strapi
 ```
 
 ## 🔥 Setting up the plugin
