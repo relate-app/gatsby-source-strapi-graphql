@@ -9,6 +9,12 @@
 
 Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql API.
 
+- [x] Deep nesting and dynamic zones
+- [x] Relationships with other collection types
+- [x] Gatsby Cloud CMS previews & incremental builds
+- [x] Build caching and only fetching changes since last build
+- [x] Support for images in markdown fields
+
 ## 🚀 Installing the plugin
 
 > This version of gatsby-source-strapi is only compatible with Strapi v4 and uses the graphql api of Strapi.
