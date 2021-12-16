@@ -149,3 +149,31 @@ To query markdown images for a markdown field named "text" you can do the follow
   }
 }
 ```
+
+This version also adds support for union types (most commonly used on dynamic component fields).
+All types in the gatsby schema gets prepended with the Strapi namespace.
+To query for dynamic field types you can do the following:
+
+```graphql
+{
+  allStrapiArticle {
+    edges {
+      node {
+        id
+        blocks {
+          ... on StrapiComponentBody {
+            body
+          }
+          ... on StrapiComponentImage {
+            image {
+              file {
+                publicURL
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
