@@ -26,9 +26,9 @@ const filterExcludedTypes = node => {
 
 const formatCollectionName = name => {
   return name
-    .replace(/([a-z])([A-Z])/, '$1 $2')
-    .replace(/\w+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase())
-    .replace(/\W+/g, '');
+    ?.replace(/([a-z])([A-Z])/, '$1 $2')
+    ?.replace(/\w+/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase())
+    ?.replace(/\W+/g, '');
 }
 
 const getFieldType = (type, strapi = false) => {
@@ -66,6 +66,15 @@ const getTypeName = type => {
   }
 }
 
+const getTypeKind = type => {
+  switch (type.kind) {
+    case 'NON_NULL':
+      return getTypeKind(type.ofType);
+    default:
+      return type.kind;
+  }
+}
+
 const getEntityType = name =>
   name.match(/(.*)(?:EntityResponse|EntityResponseCollection|RelationResponseCollection)$/)?.[1];
 
@@ -78,14 +87,14 @@ const getEntityResponseCollection = name =>
 const getCollectionType = name =>
   name.match(/(.*)(?:EntityResponse|RelationResponseCollection)$/)?.[1];
 
-const getSingleTypes = ({ collectionTypes, singleTypes }) =>
-  [...singleTypes].map(formatCollectionName);
+const getSingleTypes = ({ singleTypes }) =>
+  [...singleTypes].map(formatCollectionName).filter(Boolean);
 
-const getCollectionTypes = ({ collectionTypes, singleTypes }) =>
-  ['UploadFile', ...collectionTypes].map(formatCollectionName);
+const getCollectionTypes = ({ collectionTypes }) =>
+  ['UploadFile', ...collectionTypes].map(formatCollectionName).filter(Boolean);
 
 const getEntityTypes = ({ collectionTypes, singleTypes }) =>
-['UploadFile', ...collectionTypes, ...singleTypes].map(formatCollectionName);
+  ['UploadFile', ...collectionTypes, ...singleTypes].map(formatCollectionName).filter(Boolean);
 
 const getTypeMap = collectionTypes =>
   (collectionTypes || []).reduce((ac, a) => ({ ...ac, [a]: true }), {});
@@ -102,7 +111,7 @@ ${JSON.stringify(variables, null, 2)}
   reporter.error(`${operationName} failed – ${error.message}\n${extra}`, error);
 };
 
-const extractFiles = text => {
+const extractFiles = (text, apiURL) => {
   const files = [];
   // parse the markdown content
   const parsed = reader.parse(text)
@@ -113,11 +122,16 @@ const extractFiles = text => {
     node = event.node
     // process image nodes
     if (event.entering && node.type === 'image') {
-      files.push(node.destination);
+      let url = node.destination;
+      if (/^\//.test(node.destination)) {
+        files.push(`${apiURL}${node.destination}`);
+      } else if (/^http/i.test(node.destination)) {
+        files.push(node.destination);
+      }
     }
   }
 
-  return files;
+  return files.filter(Boolean);
 };
 
 const processFieldData = async (data, options) => {
@@ -143,11 +157,11 @@ const processFieldData = async (data, options) => {
   // Extract markdown files and download.
   if (markdownImages?.[__typename]) {
     await Promise.all((markdownImages[__typename] || []).map(async field => {
-      const files = extractFiles(data[field]);
+      const files = extractFiles(data[field], apiURL);
       if (files?.length) {
         await Promise.all(files.map(async (url, index) => {
           const fileNode = await createRemoteFileNode({
-            url: `${apiURL}${url}`,
+            url,
             parentNodeId: nodeId,
             createNode,
             createNodeId,
@@ -191,8 +205,9 @@ module.exports = {
   getCollectionType,
   getCollectionTypes,
   getSingleTypes,
+  getTypeKind,
   getTypeMap,
-  getFieldType,
   getTypeName,
+  getFieldType,
   processFieldData,
 };

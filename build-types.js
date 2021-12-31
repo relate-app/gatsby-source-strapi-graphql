@@ -4,6 +4,7 @@ const {
   getFieldType,
   getTypeMap,
   getTypeName,
+  getTypeKind,
   getEntityType,
   getEntityTypes,
 } = require('./helpers');
@@ -52,7 +53,8 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) 
               }
               return acc;
             } else {
-              switch (field.type.kind) {
+              const fieldTypeKind = getTypeKind(field.type);
+              switch (fieldTypeKind) {
                 case 'OBJECT':
                 case 'LIST': {
                   if (!typeDefs?.[fieldTypeName]) {
