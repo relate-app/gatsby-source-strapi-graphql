@@ -54,6 +54,10 @@ plugins: [
       locale: 'en', // default to all
       // Include drafts in build.
       preview: true, // defaults to false
+      // Use application token.
+      token: 'xxx',
+      // Add additional headers.
+      headers: {},
     },
   },
 ];
@@ -75,7 +79,14 @@ But you may want to fetch unpublished content in Gatsby as well. To do so, find 
 
 ### Authenticated requests
 
-Strapi's Roles & Permissions plugin allows you to protect your API actions. If you need to access a route that is only available to a logged in user, you can provide your credentials so that this plugin can access to the protected data.
+Strapi's Roles & Permissions plugin allows you to protect your API actions. If you need to access a route that is only available to a logged in user, you can provide your credentials (token) so that this plugin can access to the protected data.
+
+### Refresh content locally
+
+Set ENABLE_GATSBY_REFRESH_ENDPOINT=true in your node env for gatsby, then you can add the a webhook in Strapi pointed towards http://localhost:8080/__refresh and see content update when saving it locally.
+
+See more about this feature here:
+https://www.gatsbyjs.com/docs/refreshing-content/
 
 ## Querying data
 

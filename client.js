@@ -3,12 +3,16 @@ const fetch = require("cross-fetch");
 
 const clients = {};
 
-const client = apiURL => {
+const client = (apiURL, headers, token) => {
   if (!clients[apiURL]) {
     clients[apiURL] = new ApolloClient({
       link: new HttpLink({
         uri: `${apiURL}/graphql`,
         fetch,
+        headers: {
+          ...headers,
+          authorization: token ? `Bearer ${token}` : "",
+        },
       }),
       cache: new InMemoryCache(),
     });

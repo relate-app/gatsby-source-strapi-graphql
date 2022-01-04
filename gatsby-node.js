@@ -50,11 +50,19 @@ exports.sourceNodes = async ({
         },
       };
       operation.variables = variables;
-      const result = await client.query({ query, variables });
+      const result = await client.query({
+        query,
+        variables,
+        fetchPolicy: 'network-only',
+      });
       await Promise.all([(async () => {
         if (lastFetched) {
           const { updatedAt, ...syncVariables } = variables;
-          const syncResult = await client.query({ query: syncQuery, variables: syncVariables });
+          const syncResult = await client.query({
+            query: syncQuery,
+            variables: syncVariables,
+            fetchPolicy: 'network-only',
+          });
           const nodes = syncResult?.data?.[field.name]?.data || [];
           nodes.forEach(node => {
             const nodeId = createNodeId(`${NODE_TYPE}-${node.id}`);
