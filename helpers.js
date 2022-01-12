@@ -88,13 +88,13 @@ const getCollectionType = name =>
   name.match(/(.*)(?:EntityResponse|RelationResponseCollection)$/)?.[1];
 
 const getSingleTypes = ({ singleTypes }) =>
-  [...singleTypes].map(formatCollectionName).filter(Boolean);
+  [...singleTypes || []].map(formatCollectionName).filter(Boolean);
 
 const getCollectionTypes = ({ collectionTypes }) =>
-  ['UploadFile', ...collectionTypes].map(formatCollectionName).filter(Boolean);
+  ['UploadFile', ...collectionTypes || []].map(formatCollectionName).filter(Boolean);
 
 const getEntityTypes = ({ collectionTypes, singleTypes }) =>
-  ['UploadFile', ...collectionTypes, ...singleTypes].map(formatCollectionName).filter(Boolean);
+  ['UploadFile', ...collectionTypes || [], ...singleTypes || []].map(formatCollectionName).filter(Boolean);
 
 const getTypeMap = collectionTypes =>
   (collectionTypes || []).reduce((ac, a) => ({ ...ac, [a]: true }), {});
