@@ -147,8 +147,9 @@ const processFieldData = async (data, options) => {
 
   // Extract files and download.
   if (__typename === 'UploadFile' && data.url) {
+    const url = /^\//.test(data.url) ? `${apiURL}${data.url}` : data.url;
     const fileNode = await createRemoteFileNode({
-      url: `${apiURL}${data.url}`,
+      url,
       parentNodeId: nodeId,
       createNode,
       createNodeId,
