@@ -7,6 +7,9 @@
   Strapi Source Plugin
 </h1>
 
+<img alt="npm (version)" src="https://img.shields.io/npm/v/@relate-app/gatsby-source-strapi" />
+<img alt="npm (downloads)" src="https://img.shields.io/npm/dm/@relate-app/gatsby-source-strapi" />
+
 Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql API.
 
 - [x] Deep nesting and dynamic zones
