@@ -78,6 +78,10 @@ const getTypeKind = type => {
 const getEntityType = name =>
   name.match(/(.*)(?:EntityResponse|EntityResponseCollection|RelationResponseCollection)$/)?.[1];
 
+const isListType = name => {
+  return /(?:EntityResponseCollection|RelationResponseCollection)$/.test(name);
+};
+
 const getEntityResponse = name =>
   name.match(/(.*)(?:EntityResponse)$/)?.[1];
 
@@ -181,9 +185,15 @@ const processFieldData = async (data, options) => {
   await Promise.all(Object.keys(data).map(async key => {
     const value = data?.[key];
     if (value?.__typename) {
-      const collectionType = getEntityResponse(value.__typename);
-      if (collectionType && value?.data?.id) {
-        output[key].id = createNodeId(`Strapi${collectionType}-${value.data.id}`);
+      const entityType = getEntityType(value.__typename);
+      if (entityType && value?.data) {
+        if (value.data.length) {
+          output[key].nodeIds = value.data.map(item => createNodeId(`Strapi${entityType}-${item.id}`));
+        } else if (value.data.id) {
+          output[key].nodeId = createNodeId(`Strapi${entityType}-${value.data.id}`);
+        } else {
+          output[key] = null;
+        }
       } else {
         output[key] = await processFieldData(value, options);
       }
@@ -209,5 +219,6 @@ module.exports = {
   getTypeMap,
   getTypeName,
   getFieldType,
+  isListType,
   processFieldData,
 };

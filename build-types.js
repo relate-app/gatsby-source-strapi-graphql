@@ -7,6 +7,7 @@ const {
   getTypeKind,
   getEntityType,
   getEntityTypes,
+  isListType,
 } = require('./helpers');
 
 const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) => {
@@ -37,12 +38,19 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) 
                 const typeName = `Strapi${entityType}`;
                 return Object.assign(acc, {
                   [field.name]: {
-                    type: typeName,
+                    type: isListType(fieldTypeName) ? `[${typeName}]` : typeName,
                     resolve: (source, _, context) => {
-                      const nodeId = source?.[field.name]?.id;
+                      const nodeId = source?.[field.name]?.nodeId;
                       if (nodeId) {
                         return context.nodeModel.getNodeById({
                           id: nodeId,
+                          type: typeName,
+                        });
+                      }
+                      const nodeIds = source?.[field.name]?.nodeIds;
+                      if (nodeIds) {
+                        return context.nodeModel.getNodesByIds({
+                          ids: nodeIds,
                           type: typeName,
                         });
                       }

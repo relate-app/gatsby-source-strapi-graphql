@@ -24,9 +24,10 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
       switch (node.kind) {
         case 'OBJECT':
           // Prevent circular propagation.
-          const relationship = /Entity$/.test(node?.name);
-          if (relationship) {
+          if (/Entity$/.test(node?.name)) {
             return [`${dep(n)}id`];
+          } else if (/RelationResponseCollection$/.test(node?.name)) {
+            return [`${dep(n)}data { __typename id }`];
           }
           if (node?.fields) {
             if (root) {
@@ -46,9 +47,10 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
               const grandchild = typesMap?.[possibleType?.name];
               if (grandchild) {
                 // Prevent circular propagation.
-                const relationship = /Entity$/.test(node?.name);
-                if (relationship) {
+                if (/Entity$/.test(node?.name)) {
                   return [`${dep(n)}id`];
+                } else if (/RelationResponseCollection$/.test(node?.name)) {
+                  return [`${dep(n)}data { __typename id }`];
                 }
                 const fields = getNodeFields(grandchild, typesMap, n + 1);
                 if (fields) {
