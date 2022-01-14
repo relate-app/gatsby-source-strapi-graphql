@@ -55,6 +55,7 @@ exports.sourceNodes = async ({
         variables,
         fetchPolicy: 'network-only',
       });
+
       await Promise.all([(async () => {
         if (lastFetched) {
           const { updatedAt, ...syncVariables } = variables;
@@ -77,10 +78,11 @@ exports.sourceNodes = async ({
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
           const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
           const fields = await processFieldData(attributes, options);
+
           await createNode({
             ...fields,
             id: nodeId,
-            parent: fields?.parent?.id || null,
+            parent: fields?.parent?.nodeId || null,
             children: [],
             internal: {
               type: NODE_TYPE,
