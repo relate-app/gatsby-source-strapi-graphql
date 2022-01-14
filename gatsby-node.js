@@ -80,7 +80,7 @@ exports.sourceNodes = async ({
           await createNode({
             ...fields,
             id: nodeId,
-            parent: null,
+            parent: fields?.parent?.id || null,
             children: [],
             internal: {
               type: NODE_TYPE,

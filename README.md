@@ -88,6 +88,10 @@ Set ENABLE_GATSBY_REFRESH_ENDPOINT=true in your node env for gatsby, then you ca
 See more about this feature here:
 https://www.gatsbyjs.com/docs/refreshing-content/
 
+### Parent relationship
+
+You can now add a relationship in Strapi and have it hook up parent relationship automatic in Gatsby, make sure it's a singular relationship and using the field name "parent" for it to work. This feature can be used to build tree structured url patterns.
+
 ## Querying data
 
 You can query Document nodes created from your Strapi API like the following:
