@@ -117,6 +117,11 @@ ${JSON.stringify(variables, null, 2)}
 
 const extractFiles = (text, apiURL) => {
   const files = [];
+
+  if (!text) {
+    return files;
+  }
+
   // parse the markdown content
   const parsed = reader.parse(text)
   const walker = parsed.walker()
@@ -131,6 +136,17 @@ const extractFiles = (text, apiURL) => {
         files.push(`${apiURL}${node.destination}`);
       } else if (/^http/i.test(node.destination)) {
         files.push(node.destination);
+      }
+    } else if (event.entering && node.type === 'html_block' && node.literal) {
+      let match
+      const regex = /<img[^>]+src="?([^"\s]+)"?(.*)*\/>/g
+
+      while (match = regex.exec(node.literal)) {
+        if (/^\//.test(match[1])) {
+          files.push(`${apiURL}${match[1]}`);
+        } else if (/^http/i.test(match[1])) {
+          files.push(match[1]);
+        }
       }
     }
   }
