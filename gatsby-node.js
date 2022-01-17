@@ -78,10 +78,10 @@ exports.sourceNodes = async ({
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
           const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
           const fields = await processFieldData(attributes, options);
-
           await createNode({
             ...fields,
             id: nodeId,
+            strapiId: parseInt(id),
             parent: fields?.parent?.nodeId || null,
             children: [],
             internal: {

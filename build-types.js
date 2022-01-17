@@ -74,6 +74,10 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) 
             }
             return Object.assign(acc, { [field.name]: getFieldType(field.type) });
           }, {
+            strapiId: {
+              type: 'Int',
+              resolve: source => source?.strapiId || null,
+            },
             ...type.name === 'UploadFile' && {
               file: {
                 type: 'File',
@@ -129,7 +133,7 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) 
   return typeDefs;
 }
 
-module.exports = async (pluginOptions, schema, createNodeId) => {
+module.exports = async (pluginOptions, schema) => {
   const entityTypes = getEntityTypes(pluginOptions);
   const entityTypeMap = getTypeMap(entityTypes);
   const typeMap = await getTypesMap(pluginOptions);
