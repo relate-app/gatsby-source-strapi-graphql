@@ -104,7 +104,8 @@ You can query Document nodes created from your Strapi API like the following:
   allStrapiArticle {
     edges {
       node {
-        id
+        id # Gatsby uuid
+        strapiId # all types get this field
         title
         content
       }
