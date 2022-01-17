@@ -33,7 +33,7 @@ const formatCollectionName = name => {
 
 const getFieldType = (type, strapi = false) => {
   if (type.name === 'DateTime') {
-    return 'String';
+    return 'Date';
   }
   switch (type.kind) {
     case 'ENUM':
@@ -52,7 +52,7 @@ const getFieldType = (type, strapi = false) => {
 
 const getTypeName = type => {
   if (type.name === 'DateTime') {
-    return 'String';
+    return 'Date';
   }
   switch (type.kind) {
     case 'ENUM':
