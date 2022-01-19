@@ -86,7 +86,7 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
             let args = '';
             // Get all data for paginated fields.
             if (node?.args?.find(arg => arg.name === 'pagination')) {
-              args = '(pagination:{limit:100})';
+              args = '(pagination:{limit:1000})';
             }
             return `${dep(n)}${node.name}${args} {${sep}${[`${dep(n + 1)}__typename`, ...fields].join(sep)}${sep + dep(n)}}`;
           }
@@ -97,7 +97,7 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
           let args = '';
           // Get all data for paginated fields.
           if (node?.args?.find(arg => arg.name === 'pagination')) {
-            args = '(pagination:{limit:100})';
+            args = '(pagination:{limit:1000})';
           }
           if (typeof fields === 'string') {
             return `${dep(n)}${node.name}${args} {${sep}${fields}${sep + dep(n)}}`;
