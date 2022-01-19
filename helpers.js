@@ -35,6 +35,9 @@ const getFieldType = (type, strapi = false) => {
   if (type.name === 'DateTime') {
     return 'Date';
   }
+  if (type.name === 'Long') {
+    return 'Float';
+  }
   switch (type.kind) {
     case 'ENUM':
       return 'String';
@@ -53,6 +56,9 @@ const getFieldType = (type, strapi = false) => {
 const getTypeName = type => {
   if (type.name === 'DateTime') {
     return 'Date';
+  }
+  if (type.name === 'Long') {
+    return 'Float';
   }
   switch (type.kind) {
     case 'ENUM':
