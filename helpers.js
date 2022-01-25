@@ -132,7 +132,6 @@ const extractFiles = (text, apiURL) => {
     node = event.node
     // process image nodes
     if (event.entering && node.type === 'image') {
-      let url = node.destination;
       if (/^\//.test(node.destination)) {
         files.push(`${apiURL}${node.destination}`);
       } else if (/^http/i.test(node.destination)) {
