@@ -33,7 +33,10 @@ const formatCollectionName = name => {
 
 const getFieldType = (type, strapi = false) => {
   if (type.name === 'DateTime') {
-    return 'String';
+    return 'Date';
+  }
+  if (type.name === 'Long') {
+    return 'Float';
   }
   switch (type.kind) {
     case 'ENUM':
@@ -52,7 +55,10 @@ const getFieldType = (type, strapi = false) => {
 
 const getTypeName = type => {
   if (type.name === 'DateTime') {
-    return 'String';
+    return 'Date';
+  }
+  if (type.name === 'Long') {
+    return 'Float';
   }
   switch (type.kind) {
     case 'ENUM':
@@ -131,7 +137,6 @@ const extractFiles = (text, apiURL) => {
     node = event.node
     // process image nodes
     if (event.entering && node.type === 'image') {
-      let url = node.destination;
       if (/^\//.test(node.destination)) {
         files.push(`${apiURL}${node.destination}`);
       } else if (/^http/i.test(node.destination)) {
@@ -163,8 +168,9 @@ const processFieldData = async (data, options) => {
 
   // Extract files and download.
   if (__typename === 'UploadFile' && data.url) {
+    const url = /^\//.test(data.url) ? `${apiURL}${data.url}` : data.url;
     const fileNode = await createRemoteFileNode({
-      url: `${apiURL}${data.url}`,
+      url,
       parentNodeId: nodeId,
       createNode,
       createNodeId,

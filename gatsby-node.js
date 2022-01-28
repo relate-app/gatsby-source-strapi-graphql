@@ -55,6 +55,7 @@ exports.sourceNodes = async ({
         variables,
         fetchPolicy: 'network-only',
       });
+
       await Promise.all([(async () => {
         if (lastFetched) {
           const { updatedAt, ...syncVariables } = variables;
@@ -80,7 +81,8 @@ exports.sourceNodes = async ({
           await createNode({
             ...fields,
             id: nodeId,
-            parent: fields?.parent?.id || null,
+            strapiId: parseInt(id),
+            parent: fields?.parent?.nodeId || null,
             children: [],
             internal: {
               type: NODE_TYPE,

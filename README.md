@@ -66,6 +66,24 @@ plugins: [
 ];
 ```
 
+### Production Requirements
+
+Enable introspection of the schema in Strapi on the server by adding this snippet in `./config/plugins.js`:
+
+```js
+module.exports = ({ env }) => ({
+  // ...,
+  graphql: {
+    config: {
+      endpoint: "/graphql",
+      apolloServer: {
+        introspection: true,
+      },
+    },
+  },
+});
+```
+
 ### Internationalization support
 
 Strapi now supports internationalization. But by default, this plugin will only fetch data in the default locale of your Strapi app. If your content types are available in different locales, you can also pass an entity definition object to specify the locale you want to fetch for a content type. Use the all value to get all available locales on a collection type.
@@ -104,7 +122,8 @@ You can query Document nodes created from your Strapi API like the following:
   allStrapiArticle {
     edges {
       node {
-        id
+        id # Gatsby uuid
+        strapiId # all types get this field
         title
         content
       }
