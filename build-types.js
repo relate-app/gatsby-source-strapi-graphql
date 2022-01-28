@@ -10,7 +10,7 @@ const {
   isListType,
 } = require('./helpers');
 
-const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) => {
+const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, inlineImages) => {
   const typeDefs = {};
   const foundTypes = [];
   for (let typeName of typeNames) {
@@ -93,7 +93,7 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, markdownImages) 
                 },
               },
             },
-            ...(markdownImages?.[type.name] || []).reduce((acc, field) => {
+            ...(inlineImages?.[type.name] || []).reduce((acc, field) => {
               return {
                 ...acc,
                 [`${field}_images`]: {
@@ -137,7 +137,7 @@ module.exports = async (pluginOptions, schema) => {
   const entityTypes = getEntityTypes(pluginOptions);
   const entityTypeMap = getTypeMap(entityTypes);
   const typeMap = await getTypesMap(pluginOptions);
-  const markdownImages = pluginOptions?.markdownImages?.typesToParse;
-  const result = getTypeDefs(entityTypes, typeMap, schema, entityTypeMap, markdownImages);
+  const inlineImages = pluginOptions?.inlineImages?.typesToParse;
+  const result = getTypeDefs(entityTypes, typeMap, schema, entityTypeMap, inlineImages);
   return Object.values(result);
 };
