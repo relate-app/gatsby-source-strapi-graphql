@@ -64,7 +64,8 @@ exports.sourceNodes = async ({
             variables: syncVariables,
             fetchPolicy: 'network-only',
           });
-          const nodes = syncResult?.data?.[field.name]?.data || [];
+          let nodes = syncResult?.data?.[field.name]?.data || [];
+          nodes = Array.isArray(nodes) ? nodes : [nodes];
           nodes.forEach(node => {
             const nodeId = createNodeId(`${NODE_TYPE}-${node.id}`);
             touchNode(getNode(nodeId));
