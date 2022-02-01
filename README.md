@@ -16,7 +16,7 @@ Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql AP
 - [x] Relationships with other collection types
 - [x] Gatsby Cloud CMS previews & incremental builds
 - [x] Build caching and only fetching changes since last build
-- [x] Support for images in markdown fields
+- [x] Support for images in markdown / richtext fields
 
 ## 🚀 Installing the plugin
 
@@ -46,8 +46,8 @@ plugins: [
       apiURL: 'http://localhost:1337',
       collectionTypes: ['Article', 'User'],
       singleTypes: ['Home Page', 'Contact'],
-      // Extract images from markdown fields.
-      markdownImages: {
+      // Extract images from markdown / richtext fields.
+      inlineImages: {
         typesToParse: {
           Article: ['body'],
           ComponentBlockBody: ['text'],
@@ -172,9 +172,9 @@ To query images you can do the following:
 }
 ```
 
-To query markdown images for a markdown field named "text" you can do the following:
+To query inline images for a markdown / richtext field named "text" you can do the following:
 
-> To replace in markdown use the base returned from the file and create a custom renderer to match the url on the image with the base.
+> To replace in markdown / richtext use the base returned from the file and create a custom renderer to match the url on the image with the base.
 
 ```graphql
 {

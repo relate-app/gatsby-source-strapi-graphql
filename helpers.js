@@ -123,7 +123,12 @@ ${JSON.stringify(variables, null, 2)}
 
 const extractFiles = (text, apiURL) => {
   const files = [];
-  // parse the markdown content
+
+  if (!text) {
+    return files;
+  }
+
+  // parse the markdown / richtext content
   const parsed = reader.parse(text)
   const walker = parsed.walker()
   let event, node
@@ -137,6 +142,17 @@ const extractFiles = (text, apiURL) => {
       } else if (/^http/i.test(node.destination)) {
         files.push(node.destination);
       }
+    } else if (event.entering && node.type === 'html_block' && node.literal) {
+      let match
+      const regex = /<img[^>]+src="?([^"\s]+)"?(.*)*\/>/g
+
+      while (match = regex.exec(node.literal)) {
+        if (/^\//.test(match[1])) {
+          files.push(`${apiURL}${match[1]}`);
+        } else if (/^http/i.test(match[1])) {
+          files.push(match[1]);
+        }
+      }
     }
   }
 
@@ -146,7 +162,7 @@ const extractFiles = (text, apiURL) => {
 const processFieldData = async (data, options) => {
   const { pluginOptions, nodeId, createNode, createNodeId, getCache } = options || {};
   const apiURL = pluginOptions?.apiURL;
-  const markdownImages = pluginOptions?.markdownImages?.typesToParse;
+  const inlineImages = pluginOptions?.inlineImages?.typesToParse;
   const __typename = data?.__typename;
   const output = JSON.parse(JSON.stringify(data));
 
@@ -164,9 +180,9 @@ const processFieldData = async (data, options) => {
       output.file = fileNode.id;
     }
   }
-  // Extract markdown files and download.
-  if (markdownImages?.[__typename]) {
-    await Promise.all((markdownImages[__typename] || []).map(async field => {
+  // Extract markdown / richtext files and download.
+  if (inlineImages?.[__typename]) {
+    await Promise.all((inlineImages[__typename] || []).map(async field => {
       const files = extractFiles(data[field], apiURL);
       if (files?.length) {
         await Promise.all(files.map(async (url, index) => {
