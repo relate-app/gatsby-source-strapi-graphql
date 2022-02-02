@@ -89,7 +89,8 @@ exports.sourceNodes = async ({
             internal: {
               type: NODE_TYPE,
               content: JSON.stringify(fields),
-              contentDigest: createContentDigest(fields),
+              // contentDigest: createContentDigest(fields),
+              contentDigest: fields?.updatedAt,
             },
           });
           if (!['UploadFile'].includes(SOURCE_TYPE)) {
