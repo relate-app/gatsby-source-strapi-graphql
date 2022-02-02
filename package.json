@@ -1,6 +1,6 @@
 {
   "name": "@relate-app/gatsby-source-strapi",
-  "version": "4.4.0-1",
+  "version": "4.4.0-2",
   "description": "Source plugin for pulling documents into Gatsby-v4 from a Strapi-v4 API.",
   "keywords": [
     "gatsby",

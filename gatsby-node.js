@@ -25,11 +25,15 @@ exports.sourceNodes = async ({
   reporter,
   createContentDigest,
   createNodeId,
+  webhookBody,
   getCache,
   getNode,
   cache,
 }, pluginOptions) => {
-  console.log('RUNNING sourceNodes');
+  if (webhookBody) {
+    reporter.info(webhookBody);
+  }
+  reporter.info('RUNNING sourceNodes');
   const lastFetched = pluginOptions.cache ? await cache.get(`timestamp`) : null;
   const { unstable_createNodeManifest, createNode, touchNode } = actions;
   const operations = await buildQueries(pluginOptions);
@@ -52,7 +56,7 @@ exports.sourceNodes = async ({
         },
       };
       operation.variables = variables;
-      console.log('RUNNING client.query');
+      reporter.info('RUNNING client.query');
       const result = await client.query({
         query,
         variables,
@@ -77,13 +81,13 @@ exports.sourceNodes = async ({
       })(), (async () => {
         const data = result?.data?.[field.name]?.data;
         const items = data && (data instanceof Array ? data : [data]) || [];
-        console.log('RUNNING processing', items?.length);
+        reporter.info('RUNNING processing', items?.length);
         await Promise.all(items.map(async item => {
           const { id, attributes } = item || {};
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
           const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
           const fields = await processFieldData(attributes, options);
-          console.log('RUNNING createNode', NODE_TYPE, id, fields?.updatedAt);
+          reporter.info('RUNNING createNode', NODE_TYPE, id, fields?.updatedAt);
           await createNode({
             ...fields,
             id: nodeId,
