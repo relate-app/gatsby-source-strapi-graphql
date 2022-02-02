@@ -1,6 +1,6 @@
 
 const buildTypes = require('./build-types');
-const { catchErrors, processFieldData } = require('./helpers');
+const { catchErrors, processFieldData, createNodeManifest } = require('./helpers');
 const buildQueries = require('./build-query');
 const { getClient } = require('./api');
 
@@ -29,14 +29,15 @@ exports.sourceNodes = async ({
   getNode,
   cache,
 }, pluginOptions) => {
-  const lastFetched = await cache.get(`timestamp`);
-  const { createNode, touchNode } = actions;
+  const lastFetched = pluginOptions.cache ? await cache.get(`timestamp`) : null;
+  const { unstable_createNodeManifest, createNode, touchNode } = actions;
   const operations = await buildQueries(pluginOptions);
   const client = getClient(pluginOptions);
   await Promise.all(operations.map(async operation => {
     const { field, collectionType, singleType, query, syncQuery } = operation;
     try {
-      const NODE_TYPE = `Strapi${collectionType || singleType}`;
+      const SOURCE_TYPE = collectionType || singleType;
+      const NODE_TYPE = `Strapi${SOURCE_TYPE}`;
       const variables = {
         ...operation?.variables,
         ...pluginOptions?.preview && operation?.variables?.publicationState && {
@@ -91,6 +92,9 @@ exports.sourceNodes = async ({
               contentDigest: createContentDigest(fields),
             },
           });
+          if (!['UploadFile'].includes(SOURCE_TYPE)) {
+            createNodeManifest(SOURCE_TYPE, id, getNode(nodeId), unstable_createNodeManifest);
+          }
         }));
       })()]);
     } catch (err) {

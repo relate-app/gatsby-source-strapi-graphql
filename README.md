@@ -64,6 +64,8 @@ plugins: [
       token: 'xxx',
       // Add additional headers.
       headers: {},
+      // Enable/disable cache.
+      cache: false,
     },
   },
 ];

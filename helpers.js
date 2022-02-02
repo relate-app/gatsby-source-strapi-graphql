@@ -227,8 +227,38 @@ const processFieldData = async (data, options) => {
   return output;
 }
 
+let warnOnceForNoSupport = false
+const createNodeManifest = (type, id, node, unstable_createNodeManifest) => {
+  // This env variable is provided automatically on Gatsby Cloud hosting
+  const isPreview = true || process.env.GATSBY_IS_PREVIEW === 'true';
+  const createNodeManifestIsSupported =
+    typeof unstable_createNodeManifest === 'function';
+  const shouldCreateNodeManifest = isPreview && createNodeManifestIsSupported;
+  if (shouldCreateNodeManifest) {
+    if (type && id && node?.updatedAt) {
+      const updatedAt = node.updatedAt;
+      const manifestId = `${type}-${id}-${updatedAt}`;
+      unstable_createNodeManifest({
+        manifestId,
+        node,
+        updatedAtUTC: updatedAt,
+      });
+    }
+  } else if (
+    // it's helpful to let users know if they're using an outdated Gatsby version so they'll upgrade for the best experience
+    isPreview && !createNodeManifestIsSupported && !warnOnceForNoSupport
+  ) {
+    console.warn(
+      `${sourcePluginName}: Your version of Gatsby core doesn't support Content Sync (via the unstable_createNodeManifest action). Please upgrade to the latest version to use Content Sync in your site.`
+    )
+    // This is getting called for every entry node so we don't want the console logs to get cluttered
+    warnOnceForNoSupport = true
+  }
+}
+
 module.exports = {
   catchErrors,
+  createNodeManifest,
   filterExcludedTypes,
   getEntityResponse,
   getEntityResponseCollection,
