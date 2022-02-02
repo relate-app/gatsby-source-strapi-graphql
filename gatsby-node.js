@@ -31,7 +31,7 @@ exports.sourceNodes = async ({
   cache,
 }, pluginOptions) => {
   if (webhookBody) {
-    reporter.info(webhookBody);
+    throw new Error('WEBHOOK');
   }
   reporter.info('RUNNING sourceNodes');
   const lastFetched = pluginOptions.cache ? await cache.get(`timestamp`) : null;
