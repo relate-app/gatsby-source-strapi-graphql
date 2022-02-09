@@ -93,7 +93,8 @@ exports.sourceNodes = async ({
             },
           });
           if (!['UploadFile'].includes(SOURCE_TYPE)) {
-            createNodeManifest(SOURCE_TYPE, id, getNode(nodeId), unstable_createNodeManifest);
+            const manifestId = createNodeManifest(SOURCE_TYPE, id, getNode(nodeId), unstable_createNodeManifest);
+            reporter.info('MANIFEST ID: ' + manifestId);
           }
         }));
       })()]);
