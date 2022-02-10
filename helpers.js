@@ -243,7 +243,6 @@ const createNodeManifest = (type, id, node, unstable_createNodeManifest) => {
         node,
         updatedAtUTC: updatedAt,
       });
-      return manifestId;
     }
   } else if (
     // it's helpful to let users know if they're using an outdated Gatsby version so they'll upgrade for the best experience
