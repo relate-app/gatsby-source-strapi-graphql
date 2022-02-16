@@ -12,11 +12,14 @@
 
 Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql API.
 
+This plugin depends on Strapi's GraphQL introspection, which enables a lot of missing features in the plugin released by Strapi (i.e. grapqhl unions, builds failing due to missing data in fields, etc), but it also requires introspection to be enabled in production (read below how to enable it).
+
 - [x] Deep nesting and dynamic zones
-- [x] Relationships with other collection types
+- [x] Relationships with other collection types (all types, one-way, two-way)
 - [x] Gatsby Cloud CMS previews & incremental builds
 - [x] Build caching and only fetching changes since last build
 - [x] Support for images in markdown / richtext fields
+- [x] No more failing builds do to missing content in fields
 
 ## 🚀 Installing the plugin
 
