@@ -9,6 +9,18 @@ const {
   filterExcludedTypes,
 } = require('./helpers');
 
+const buildArgs = node => {
+  const args = [];
+  // Get all data for paginated fields.
+  if (node?.args?.find(arg => arg.name === 'pagination')) {
+    args.push('pagination:{limit:1000}');
+  }
+  if (node?.args?.find(arg => arg.name === 'publicationState')) {
+    args.push('publicationState: $publicationState');
+  }
+  return args.length ? `(${args.join(',')})` : '';
+}
+
 const getNodeFields = (node, typesMap, n = 0, root = false) => {
   const max = 16;
   if (n > max) {
@@ -83,22 +95,14 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
         case 'OBJECT': {
           const fields = getNodeFields(node.type, typesMap, n + 1);
           if (fields) {
-            let args = '';
-            // Get all data for paginated fields.
-            if (node?.args?.find(arg => arg.name === 'pagination')) {
-              args = '(pagination:{limit:1000})';
-            }
+            const args = buildArgs(node);
             return `${dep(n)}${node.name}${args} {${sep}${[`${dep(n + 1)}__typename`, ...fields].join(sep)}${sep + dep(n)}}`;
           }
           break;
         }
         case 'LIST':
           const fields = getNodeFields(node.type?.ofType, typesMap, n + 1);
-          let args = '';
-          // Get all data for paginated fields.
-          if (node?.args?.find(arg => arg.name === 'pagination')) {
-            args = '(pagination:{limit:1000})';
-          }
+          const args = buildArgs(node);
           if (typeof fields === 'string') {
             return `${dep(n)}${node.name}${args} {${sep}${fields}${sep + dep(n)}}`;
           } else if (fields?.length) {
