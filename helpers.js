@@ -175,6 +175,7 @@ const processFieldData = async (data, options) => {
       createNode,
       createNodeId,
       getCache,
+      httpHeaders: pluginOptions.headers || {},
     });
     if (fileNode) {
       output.file = fileNode.id;

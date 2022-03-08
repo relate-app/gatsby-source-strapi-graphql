@@ -10,8 +10,8 @@ const client = (apiURL, headers, token) => {
         uri: `${apiURL}/graphql`,
         fetch,
         headers: {
+          ...token && { authorization: `Bearer ${token}` },
           ...headers,
-          authorization: token ? `Bearer ${token}` : "",
         },
       }),
       cache: new InMemoryCache(),
