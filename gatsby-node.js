@@ -46,9 +46,6 @@ exports.sourceNodes = async ({
         ...lastFetched && operation?.variables?.updatedAt && {
           updatedAt: new Date(lastFetched).toISOString(),
         },
-        ...pluginOptions?.locale && operation?.variables?.locale && {
-          locale: pluginOptions.locale,
-        },
       };
       operation.variables = variables;
       const result = await client.query({

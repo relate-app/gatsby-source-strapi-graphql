@@ -1,5 +1,5 @@
 const { gql } = require("@apollo/client")
-const { getTypesMap } = require('./api');
+const { getTypesMap, getLocales } = require('./api');
 const {
   getEntityResponse,
   getEntityResponseCollection,
@@ -140,7 +140,7 @@ const buildQueries = (operations, typesMap) => {
     const variables = {
       ...isCollectionType && { pagination: { start: 0, limit: 1000 } },
       ...publicationState && { publicationState: 'LIVE' },
-      ...locale && { locale: 'all' },
+      ...locale && { locale: operation.locale },
       ...updatedAt && { updatedAt: "1990-01-01T00:00:00.000Z" },
     };
     const meta = isCollectionType ? ` meta { pagination { total } }` : '';
@@ -157,25 +157,31 @@ const buildQueries = (operations, typesMap) => {
   });
 };
 
-const getQueryFields = (singleTypes, collectionTypeMap, typesMap) => {
+const getQueryFields = (singleTypes, collectionTypeMap, typesMap, locales) => {
   const Query = typesMap?.Query;
   return Query.fields.reduce((acc, field) => {
     const singleType = getEntityResponse(field.type.name);
     const collectionType = getEntityResponseCollection(field.type.name);
     if (collectionTypeMap?.[collectionType]) {
       const type = typesMap?.[collectionType];
-      acc.push({
-        field,
-        query: getNodeFields(type, typesMap, 4, true),
-        collectionType,
+      locales.forEach(locale => {
+        acc.push({
+          field,
+          query: getNodeFields(type, typesMap, 4, true),
+          collectionType,
+          locale,
+        });
       });
     }
     if (singleTypes?.[singleType]) {
       const type = typesMap?.[singleType];
-      acc.push({
-        field,
-        query: getNodeFields(type, typesMap, 4, true),
-        singleType,
+      locales.forEach(locale => {
+        acc.push({
+          field,
+          query: getNodeFields(type, typesMap, 4, true),
+          singleType,
+          locale,
+        });
       });
     }
     return acc;
@@ -188,6 +194,7 @@ module.exports = async pluginOptions => {
   const singleTypes = getSingleTypes(pluginOptions);
   const singleTypeMap = getTypeMap(singleTypes);
   const typesMap = await getTypesMap(pluginOptions);
-  const fields = getQueryFields(singleTypeMap, collectionTypeMap, typesMap);
+  const locales = await getLocales(pluginOptions);
+  const fields = getQueryFields(singleTypeMap, collectionTypeMap, typesMap, locales);
   return buildQueries(fields, typesMap);
 };

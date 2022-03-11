@@ -56,8 +56,8 @@ plugins: [
           ComponentBlockBody: ['text'],
         },
       },
-      // Only include specific locale.
-      locale: 'en', // default to all
+      // Only include specific locales.
+      locale: ['en', 'sv'], // defaults to 'all'
       // Include drafts in build.
       preview: true, // defaults to false
       // Use application token.
@@ -91,7 +91,7 @@ module.exports = ({ env }) => ({
 
 ### Internationalization support
 
-Strapi now supports internationalization. But by default, this plugin will only fetch data in the default locale of your Strapi app. If your content types are available in different locales, you can also pass an entity definition object to specify the locale you want to fetch for a content type. Use the all value to get all available locales on a collection type.
+Strapi now supports internationalization. But by default, this plugin will only fetch data in the default locale of your Strapi app. If your content types are available in different locales, you can also pass an entity definition object to specify the locale you want to fetch for a content type. Use the all value to get all available locales on a collection type, an array or comma separated list of locale codes will fetch only these locales.
 
 ### Relationship support
 
