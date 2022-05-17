@@ -122,14 +122,17 @@ const buildQueries = (operations, typesMap) => {
     const isCollectionType = operation?.collectionType;
     const operationName = `${operation.collectionType || operation.singleType}Query`;
     const publicationState = Boolean(operation.field.args.find(arg => arg.name === 'publicationState'));
+    const publicationStateDef = operation.query.includes('$publicationState');
     const locale = Boolean(operation.field.args.find(arg => arg.name === 'locale'));
+    const localeDef = operation.query.includes('$locale');
     const filterInputType = typesMap?.[operation.field.args.find(arg => arg.name === 'filters')?.type?.name];
     const updatedAt = Boolean((filterInputType?.inputFields || []).find(input => input.name === 'updatedAt'));
+    const updatedAtDef = operation.query.includes('$updatedAt');
     const varDef = [
       isCollectionType && '$pagination: PaginationArg',
-      publicationState && '$publicationState: PublicationState',
-      locale && '$locale: I18NLocaleCode',
-      updatedAt && '$updatedAt: DateTime',
+      (publicationState || publicationStateDef) && '$publicationState: PublicationState',
+      (locale || localeDef) && '$locale: I18NLocaleCode',
+      (updatedAt || updatedAtDef) && '$updatedAt: DateTime',
     ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const varSet = [
       isCollectionType && 'pagination: $pagination',
@@ -139,9 +142,9 @@ const buildQueries = (operations, typesMap) => {
     ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const variables = {
       ...isCollectionType && { pagination: { start: 0, limit: 1000 } },
-      ...publicationState && { publicationState: 'LIVE' },
-      ...locale && { locale: operation.locale },
-      ...updatedAt && { updatedAt: "1990-01-01T00:00:00.000Z" },
+      ...(publicationState || publicationStateDef) && { publicationState: 'LIVE' },
+      ...(locale || localeDef) && { locale: operation.locale },
+      ...(updatedAt || updatedAtDef) && { updatedAt: "1990-01-01T00:00:00.000Z" },
     };
     const meta = isCollectionType ? ` meta { pagination { total } }` : '';
     const data = `__typename data { __typename id attributes { __typename ${operation.query} } }${meta}`;
