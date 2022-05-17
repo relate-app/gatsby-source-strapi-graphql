@@ -2,7 +2,7 @@
 const buildTypes = require('./build-types');
 const { catchErrors, processFieldData, createNodeManifest } = require('./helpers');
 const buildQueries = require('./build-query');
-const { getClient } = require('./api');
+const { getClient, getContentTypes } = require('./api');
 
 /**
  * Implementing Gatsby's Node APIs.
@@ -32,12 +32,14 @@ exports.sourceNodes = async ({
   const lastFetched = pluginOptions.cache !== false ? await cache.get(`timestamp`) : null;
   const { unstable_createNodeManifest, createNode, touchNode } = actions;
   const operations = await buildQueries(pluginOptions);
+  const contentTypes = await getContentTypes(pluginOptions);
   const client = getClient(pluginOptions);
   await Promise.all(operations.map(async operation => {
     const { field, collectionType, singleType, query, syncQuery } = operation;
     try {
       const SOURCE_TYPE = collectionType || singleType;
       const NODE_TYPE = `Strapi${SOURCE_TYPE}`;
+      const UID = contentTypes?.[SOURCE_TYPE] || null;
       const variables = {
         ...operation?.variables,
         ...pluginOptions?.preview && operation?.variables?.publicationState && {
@@ -89,8 +91,8 @@ exports.sourceNodes = async ({
               contentDigest: createContentDigest(fields),
             },
           });
-          if (!['UploadFile'].includes(SOURCE_TYPE)) {
-            createNodeManifest(SOURCE_TYPE, id, getNode(nodeId), unstable_createNodeManifest);
+          if (UID) {
+            createNodeManifest(UID, id, getNode(nodeId), unstable_createNodeManifest);
           }
         }));
       })()]);

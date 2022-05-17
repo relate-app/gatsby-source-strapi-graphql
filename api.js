@@ -1,5 +1,6 @@
 const { gql } = require("@apollo/client")
 const client = require('./client');
+const fetch = require("cross-fetch");
 
 const query = gql`query IntrospectionQuery { __schema { queryType { name } mutationType { name } subscriptionType { name } types { ...FullType } directives { name description locations args { ...InputValue } } } } fragment FullType on __Type { kind name description fields(includeDeprecated: true) { name description args { ...InputValue } type { ...TypeRef } isDeprecated deprecationReason } inputFields { ...InputValue } interfaces { ...TypeRef } enumValues(includeDeprecated: true) { name description isDeprecated deprecationReason } possibleTypes { ...TypeRef } } fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue } fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }`;
 
@@ -16,6 +17,25 @@ const getTypes = async pluginOptions => {
   const { types } = await getSchema(pluginOptions);
   return types;
 }
+
+function clearAndUpper(text) {
+  return text.replace(/-/, "").toUpperCase();
+}
+
+function toPascalCase(text) {
+  return text.replace(/(^\w|-\w)/g, clearAndUpper);
+}
+
+const getContentTypes = async ({ apiURL, token } = {}) => {
+  const options = { headers: { Authorization: `Bearer ${token}` } };
+  const [{ data: contentTypes }] = await Promise.all([
+    fetch(`${apiURL}/api/content-type-builder/content-types`, options).then(res => res.json()),
+  ]);
+
+  return contentTypes.reduce((acc, type) => Object.assign(acc, {
+    [toPascalCase(type.apiID)]: type.uid
+  }), {});
+};
 
 const getSpecifiedLocales = ({ locale } = {}) => {
   let locales = [];
@@ -62,6 +82,7 @@ const getTypesMap = async pluginOptions => {
 
 module.exports = {
   getClient,
+  getContentTypes,
   getLocales,
   getSchema,
   getTypes,

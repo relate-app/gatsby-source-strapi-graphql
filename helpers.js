@@ -229,16 +229,16 @@ const processFieldData = async (data, options) => {
 }
 
 let warnOnceForNoSupport = false
-const createNodeManifest = (type, id, node, unstable_createNodeManifest) => {
+const createNodeManifest = (uid, id, node, unstable_createNodeManifest) => {
   // This env variable is provided automatically on Gatsby Cloud hosting
-  const isPreview = true || process.env.GATSBY_IS_PREVIEW === 'true';
+  const isPreview = process.env.GATSBY_IS_PREVIEW === 'true';
   const createNodeManifestIsSupported =
     typeof unstable_createNodeManifest === 'function';
   const shouldCreateNodeManifest = isPreview && createNodeManifestIsSupported;
   if (shouldCreateNodeManifest) {
-    if (type && id && node?.updatedAt) {
+    if (uid && id && node?.updatedAt) {
       const updatedAt = node.updatedAt;
-      const manifestId = `${type}-${id}-${updatedAt}`;
+      const manifestId = `${uid}-${id}-${updatedAt}`;
       unstable_createNodeManifest({
         manifestId,
         node,
