@@ -28,10 +28,10 @@ This plugin depends on Strapi's GraphQL introspection, which enables a lot of mi
 
 ```shell
 # Using Yarn
-yarn add gatsby-source-strapi@relate-app/gatsby-source-strapi
+yarn add gatsby-source-strapi@npm:@relate-app/gatsby-source-strapi
 
 # Or using NPM
-npm install --save gatsby-source-strapi@relate-app/gatsby-source-strapi
+npm install --save gatsby-source-strapi@npm:@relate-app/gatsby-source-strapi
 ```
 
 ## 🔥 Setting up the plugin
