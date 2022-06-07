@@ -30,7 +30,7 @@ exports.sourceNodes = async ({
   cache,
 }, pluginOptions) => {
   const lastFetched = pluginOptions.cache !== false ? await cache.get(`timestamp`) : null;
-  const { unstable_createNodeManifest, createNode, touchNode } = actions;
+  const { unstable_createNodeManifest, createNode, touchNode, createNodeField } = actions;
   const operations = await buildQueries(pluginOptions);
   const contentTypes = await getContentTypes(pluginOptions);
   const client = getClient(pluginOptions);
@@ -77,7 +77,14 @@ exports.sourceNodes = async ({
         await Promise.all(items.map(async item => {
           const { id, attributes } = item || {};
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
-          const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
+          const entryNode = {
+            id: nodeId,
+            strapi_id: parseInt(id),
+            internal: {
+              type: NODE_TYPE,
+            }
+          };
+          const options = { nodeId, createNode, createNodeId, pluginOptions, getCache, createContentDigest, entryNode };
           const fields = await processFieldData(attributes, options);
           await createNode({
             ...fields,

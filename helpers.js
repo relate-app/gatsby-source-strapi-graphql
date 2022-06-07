@@ -159,8 +159,34 @@ const extractFiles = (text, apiURL) => {
   return files.filter(Boolean);
 };
 
+/**
+ * Create a child node for markdown fields
+ * @param {String} text value
+ * @param {Object} ctx
+ * @returns {Object} gatsby node
+ */
+const prepareTextNode = (text, ctx) => {
+  const { createContentDigest, createNodeId, parentNode, attributeName } = ctx;
+  const textNodeId = createNodeId(
+    `${parentNode.strapi_id}-${parentNode.internal.type}-${attributeName}-TextNode`
+  );
+
+  return {
+    id: textNodeId,
+    parent: parentNode.id,
+    children: [],
+    [attributeName]: text,
+    internal: {
+      type: `${parentNode.internal.type}_${attributeName}_TextNode`.toUpperCase(),
+      mediaType: `text/markdown`,
+      content: text,
+      contentDigest: createContentDigest(text),
+    },
+  };
+};
+
 const processFieldData = async (data, options) => {
-  const { pluginOptions, nodeId, createNode, createNodeId, getCache } = options || {};
+  const { pluginOptions, nodeId, createNode, createNodeId, getCache, createContentDigest, entryNode } = options || {};
   const apiURL = pluginOptions?.apiURL;
   const inlineImages = pluginOptions?.inlineImages?.typesToParse;
   const __typename = data?.__typename;
@@ -184,6 +210,7 @@ const processFieldData = async (data, options) => {
   // Extract markdown / richtext files and download.
   if (inlineImages?.[__typename]) {
     await Promise.all((inlineImages[__typename] || []).map(async field => {
+      // Images
       const files = extractFiles(data[field], apiURL);
       if (files?.length) {
         await Promise.all(files.map(async (url, index) => {
@@ -202,6 +229,15 @@ const processFieldData = async (data, options) => {
           }
         }));
       }
+      // Markdown
+      const textNode = prepareTextNode(data[field], {
+        createContentDigest,
+        createNodeId,
+        parentNode: entryNode,
+        field,
+      });
+      createNode(textNode);
+      output[`${field}_markdown`] = textNode.id;
     }));
   }
 

@@ -106,6 +106,13 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, inlineImages) =>
                     });
                   },
                 },
+                [`${field}_markdown`]: {
+                  type: 'MarkdownRemark',
+                  resolve: async (source, _, context) => {
+                    const id = source?.[`${field}_markdown`];
+                    return context.nodeModel.getNodeById({ id });
+                  },
+                },
               }
             }, {}),
           }),
@@ -124,7 +131,7 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, inlineImages) =>
             return `Strapi${unionType.name}`;
           }, {}),
         });
-      
+
       default:
         break;
     }
