@@ -27,13 +27,18 @@ exports.sourceNodes = async ({
   createNodeId,
   getCache,
   getNode,
+  getNodes,
   cache,
 }, pluginOptions) => {
   const lastFetched = pluginOptions.cache !== false ? await cache.get(`timestamp`) : null;
-  const { unstable_createNodeManifest, createNode, touchNode } = actions;
+  const { unstable_createNodeManifest, createNode, touchNode, deleteNode } = actions;
   const operations = await buildQueries(pluginOptions);
   const contentTypes = await getContentTypes(pluginOptions);
   const client = getClient(pluginOptions);
+  const nodesToDelete = new Set(getNodes().filter(
+    (n) => n.internal.owner === `@relate-app/gatsby-source-strapi`
+  ).map(n => n.id));
+
   await Promise.all(operations.map(async operation => {
     const { field, collectionType, singleType, query, syncQuery } = operation;
     try {
@@ -68,6 +73,7 @@ exports.sourceNodes = async ({
           nodes = Array.isArray(nodes) ? nodes : [nodes];
           nodes.forEach(node => {
             const nodeId = createNodeId(`${NODE_TYPE}-${node.id}`);
+            nodesToDelete.delete(nodeId);
             touchNode(getNode(nodeId));
           });
         }
@@ -77,6 +83,7 @@ exports.sourceNodes = async ({
         await Promise.all(items.map(async item => {
           const { id, attributes } = item || {};
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
+          nodesToDelete.delete(nodeId);
           const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
           const fields = await processFieldData(attributes, options);
           await createNode({
@@ -100,6 +107,13 @@ exports.sourceNodes = async ({
       catchErrors(err, operation, reporter);
     }
   }));
+
+  // Delete nodes not found anymore.
+  nodesToDelete.forEach(nodeId => {
+    const node = getNode(nodeId);
+    touchNode(node);
+    deleteNode(node);
+  });
 };
 
 exports.onPostBuild = async ({ cache }) => {
