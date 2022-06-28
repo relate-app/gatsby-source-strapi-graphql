@@ -144,7 +144,7 @@ const extractFiles = (text, apiURL) => {
       }
     } else if (event.entering && node.type === 'html_block' && node.literal) {
       let match
-      const regex = /<img[^>]+src="?([^"\s]+)"?(.*)*\/>/g
+      const regex = /<img[^>]+src="?([^"\s]+)"?\s*/gi
 
       while (match = regex.exec(node.literal)) {
         if (/^\//.test(match[1])) {
