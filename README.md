@@ -7,8 +7,8 @@
   Strapi Source Plugin
 </h1>
 
-![npm (version)](https://img.shields.io/npm/v/@relate-app/gatsby-source-strapi)
-![npm (downloads)](https://img.shields.io/npm/dm/@relate-app/gatsby-source-strapi)
+![npm (version)](https://img.shields.io/npm/v/gatsby-source-strapi-graphql)
+![npm (downloads)](https://img.shields.io/npm/dm/gatsby-source-strapi-graphql)
 
 Source plugin for pulling documents into Gatsby-v4 from the Strapi-v4 graphql API.
 
@@ -23,15 +23,15 @@ This plugin depends on Strapi's GraphQL introspection, which enables a lot of mi
 
 ## 🚀 Installing the plugin
 
-> This version of gatsby-source-strapi is only compatible with Strapi v4 and uses the graphql api of Strapi.
+> This version of gatsby-source-strapi-graphql is only compatible with Strapi v4 and uses the graphql api of Strapi.
 
 
 ```shell
 # Using Yarn
-yarn add gatsby-source-strapi@npm:@relate-app/gatsby-source-strapi
+yarn add gatsby-source-strapi-graphql
 
 # Or using NPM
-npm install --save gatsby-source-strapi@npm:@relate-app/gatsby-source-strapi
+npm install --save gatsby-source-strapi-graphql
 ```
 
 ## 🔥 Setting up the plugin
@@ -44,7 +44,7 @@ You can enable and configure this plugin in your gatsby-config.js file.
 // In your gatsby-config.js
 plugins: [
   {
-    resolve: 'gatsby-source-strapi',
+    resolve: 'gatsby-source-strapi-graphql',
     options: {
       apiURL: 'http://localhost:1337',
       collectionTypes: ['Article', 'User'],
