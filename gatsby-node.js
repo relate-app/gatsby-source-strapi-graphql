@@ -47,9 +47,6 @@ exports.sourceNodes = async ({
       const UID = contentTypes?.[SOURCE_TYPE] || null;
       const variables = {
         ...operation?.variables,
-        ...pluginOptions?.preview && operation?.variables?.publicationState && {
-          publicationState: 'PREVIEW',
-        },
         ...lastFetched && operation?.variables?.updatedAt && {
           updatedAt: new Date(lastFetched).toISOString(),
         },
