@@ -32,7 +32,7 @@ const formatCollectionName = name => {
 }
 
 const getFieldType = (type, strapi = false) => {
-  if (type.name === 'DateTime') {
+  if (type.name === 'DateTime' || type.name === 'Date' || type.name === 'Time') {
     return 'Date';
   }
   if (type.name === 'Long') {
@@ -54,7 +54,7 @@ const getFieldType = (type, strapi = false) => {
 }
 
 const getTypeName = type => {
-  if (type.name === 'DateTime') {
+  if (type.name === 'DateTime' || type.name === 'Date' || type.name === 'Time') {
     return 'Date';
   }
   if (type.name === 'Long') {
