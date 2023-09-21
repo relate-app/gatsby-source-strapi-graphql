@@ -36,7 +36,7 @@ exports.sourceNodes = async ({
   const contentTypes = await getContentTypes(pluginOptions);
   const client = getClient(pluginOptions);
   const nodesToDelete = new Set(getNodes().filter(
-    (n) => n.internal.owner === `@relate-app/gatsby-source-strapi`
+    (n) => n.internal.owner === `gatsby-source-strapi-graphql`
   ).map(n => n.id));
 
   await Promise.all(operations.map(async operation => {
