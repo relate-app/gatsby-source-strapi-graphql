@@ -1,9 +1,37 @@
 const { print } = require("graphql");
 const { createRemoteFileNode } = require(`gatsby-source-filesystem`);
 const commonmark = require('commonmark');
+const path = require('path');
 
 const reader = new commonmark.Parser();
 const excludedTypes = ['GenericMorph'];
+
+function extractExtensionFromUrl(urlString) {
+  const isRelativeUrl = urlString.startsWith('/');
+  
+  if (isRelativeUrl) {
+    // For relative URLs, directly use path module to extract the extension
+    const extension = path.extname(urlString);
+    return extension ? extension.slice(1) : null; // Remove the leading dot from the extension
+  }
+
+  try {
+    const parsedUrl = new URL(urlString);
+
+    // Check if the URL has a pathname (contains a file path)
+    if (!parsedUrl.pathname) {
+      return null; // If there's no pathname, there's no extension
+    }
+
+    // Use path module to extract the extension
+    const extension = path.extname(parsedUrl.pathname);
+
+    return extension ? extension.slice(1) : null; // Remove the leading dot from the extension
+  } catch (error) {
+    // Handle invalid URL by returning null
+    return null;
+  }
+}
 
 const catchErrors = (err, operation, reporter) => {
   if (err?.networkError?.result?.errors) {
@@ -159,6 +187,12 @@ const extractFiles = (text, apiURL) => {
   return files.filter(Boolean);
 };
 
+const shouldDownloadFile = (pluginOptions, url) => {
+  const ext = extractExtensionFromUrl(url);
+  // Defaulting to all files
+  return [true, null, undefined].includes(pluginOptions?.download) || pluginOptions?.download?.includes?.(ext);
+}
+
 const processFieldData = async (data, options) => {
   const { pluginOptions, nodeId, createNode, createNodeId, getCache, uploadFileMap } = options || {};
   const apiURL = pluginOptions?.apiURL;
@@ -167,18 +201,20 @@ const processFieldData = async (data, options) => {
   const output = JSON.parse(JSON.stringify(data));
 
   // Extract files and download.
-  if (Boolean(pluginOptions?.download) && __typename === 'UploadFile' && data.url) {
-    const url = /^\//.test(data.url) ? `${apiURL}${data.url}` : data.url;
-    const fileNode = await createRemoteFileNode({
-      url,
-      parentNodeId: nodeId,
-      createNode,
-      createNodeId,
-      getCache,
-      httpHeaders: pluginOptions.headers || {},
-    });
-    if (fileNode) {
-      output.file = fileNode.id;
+  if (__typename === 'UploadFile' && data.url) {
+    if (shouldDownloadFile(pluginOptions, data.url)) {
+      const url = /^\//.test(data.url) ? `${apiURL}${data.url}` : data.url;
+      const fileNode = await createRemoteFileNode({
+        url,
+        parentNodeId: nodeId,
+        createNode,
+        createNodeId,
+        getCache,
+        httpHeaders: pluginOptions.headers || {},
+      });
+      if (fileNode) {
+        output.file = fileNode.id;
+      }
     }
   }
   // Extract markdown / richtext files and download.
@@ -190,17 +226,19 @@ const processFieldData = async (data, options) => {
           const url = uri.replace(apiURL, '').split('#')[0].split('?')[0]; // lookup can only find file nodes without applied styles (#xxx).
           const nodeId = uploadFileMap[url];
           let file;
-          if (!nodeId && Boolean(pluginOptions?.download)) {
-            const fileNode = await createRemoteFileNode({
-              url: uri,
-              parentNodeId: nodeId,
-              createNode,
-              createNodeId,
-              getCache,
-              httpHeaders: pluginOptions.headers || {},
-            });
-            if (fileNode) {
-              file = fileNode.id;
+          if (!nodeId) {
+            if (shouldDownloadFile(pluginOptions, uri)) {
+              const fileNode = await createRemoteFileNode({
+                url: uri,
+                parentNodeId: nodeId,
+                createNode,
+                createNodeId,
+                getCache,
+                httpHeaders: pluginOptions.headers || {},
+              });
+              if (fileNode) {
+                file = fileNode.id;
+              }
             }
           }
           if (!output?.[`${field}_images`]) {

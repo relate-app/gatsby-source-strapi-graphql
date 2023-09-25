@@ -67,8 +67,8 @@ plugins: [
       headers: {},
       // Enable/disable cache.
       cache: false,
-      // Download files when sourcing (required true for sharp transformations).
-      download: false, // defaults to false
+      // Only download specific file types when sourcing (don't add option if all should be downloaded).
+      download: ['svg', 'pdf'], // defaults to all,
     },
   },
 ];

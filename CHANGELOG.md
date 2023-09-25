@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+## 6.1.0 (2023-09-25)
+
+Features:
+
+  - Added support for filtering specific file types on extension using the option: `{ download: ['svg', 'pdf'] }`
+
 ## 6.0.0 (2023-09-25)
 
 Features:
@@ -39,7 +45,7 @@ Features:
       },
     },
   ```
-  - Opionally download images, with the new plugin option: **download** defaulting to false, to enable faster sourcing and remote transformations.
+  - Opionally download images, with the new plugin option: **download** defaulting to all, to enable faster sourcing and remote transformations.
 
 Breaking changes:
 
