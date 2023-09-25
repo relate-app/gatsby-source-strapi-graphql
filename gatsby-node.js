@@ -28,18 +28,20 @@ exports.sourceNodes = async ({
   getCache,
   getNode,
   getNodes,
+  getNodesByType,
   cache,
 }, pluginOptions) => {
+  const uploadFileMap = {};
   const lastFetched = pluginOptions.cache !== false ? await cache.get(`timestamp`) : null;
   const { unstable_createNodeManifest, createNode, touchNode, deleteNode } = actions;
-  const operations = await buildQueries(pluginOptions);
+  const operations = (await buildQueries(pluginOptions));
   const contentTypes = await getContentTypes(pluginOptions);
   const client = getClient(pluginOptions);
   const nodesToDelete = new Set(getNodes().filter(
     (n) => n.internal.owner === `gatsby-source-strapi-graphql`
   ).map(n => n.id));
 
-  await Promise.all(operations.map(async operation => {
+  async function executeOperation(operation) {
     const { field, collectionType, singleType, query, syncQuery } = operation;
     try {
       const SOURCE_TYPE = collectionType || singleType;
@@ -84,8 +86,11 @@ exports.sourceNodes = async ({
           const { id, attributes } = item || {};
           const nodeId = createNodeId(`${NODE_TYPE}-${id}`);
           nodesToDelete.delete(nodeId);
-          const options = { nodeId, createNode, createNodeId, pluginOptions, getCache };
+          const options = { nodeId, createNode, createNodeId, pluginOptions, getCache, getNodesByType, uploadFileMap };
           const fields = await processFieldData(attributes, options);
+          if (NODE_TYPE === 'StrapiUploadFile' && fields?.url) {
+            uploadFileMap[fields.url] = nodeId;
+          }
           await createNode({
             ...fields,
             id: nodeId,
@@ -106,7 +111,11 @@ exports.sourceNodes = async ({
     } catch (err) {
       catchErrors(err, operation, reporter);
     }
-  }));
+  }
+
+  // Get upload files first to build uploadFilesMap.
+  await Promise.all(operations.filter(o => o.operationName === 'UploadFileQuery').map(executeOperation));
+  await Promise.all(operations.filter(o => o.operationName !== 'UploadFileQuery').map(executeOperation));
 
   // Delete nodes not found anymore.
   nodesToDelete.forEach(nodeId => {

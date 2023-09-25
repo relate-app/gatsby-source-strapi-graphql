@@ -16,14 +16,15 @@ This plugin depends on Strapi's GraphQL introspection, which enables a lot of mi
 
 - [x] Deep nesting and dynamic zones
 - [x] Relationships with other collection types (all types, one-way, two-way)
-- [x] Gatsby Cloud CMS previews & incremental builds
+- [x] Supporting incremental builds using cache
 - [x] Build caching and only fetching changes since last build
 - [x] Support for images in markdown / richtext fields
 - [x] No more failing builds do to missing content in fields
+- [x] Optionally download images from Strapi: `{ download: true }`
 
 ## 🚀 Installing the plugin
 
-> This version of gatsby-source-strapi-graphql is only compatible with Strapi v4 and uses the graphql api of Strapi.
+> This version of gatsby-source-strapi-graphql is only compatible with Strapi v4+ and uses the graphql api of Strapi.
 
 
 ```shell
@@ -66,6 +67,8 @@ plugins: [
       headers: {},
       // Enable/disable cache.
       cache: false,
+      // Download files when sourcing (required true for sharp transformations).
+      download: false, // defaults to false
     },
   },
 ];
@@ -113,6 +116,8 @@ Set ENABLE_GATSBY_REFRESH_ENDPOINT=true in your node env for gatsby, then you ca
 
 See more about this feature here:
 https://www.gatsbyjs.com/docs/refreshing-content/
+
+> Be aware there is a bug in v5 gatsby locally when this is enabled.
 
 ### Parent relationship
 
@@ -162,13 +167,15 @@ To query images you can do the following:
       node {
         id
         singleImage {
+          uri # remote url in strapi
           file {
-            publicURL
+            publicURL # local downloaded url
           }
         }
         multipleImages {
+          uri # remote url in strapi
           file {
-            publicURL
+            publicURL # local downloaded url
           }
         }
       }
@@ -189,8 +196,11 @@ To query inline images for a markdown / richtext field named "text" you can do t
         id
         text
         text_images {
-          base
-          publicURL
+          uri # remote url in strapi
+          file {
+            base
+            publicURL # local downloaded url
+          }
         }
       }
     }
@@ -214,8 +224,9 @@ To query for dynamic field types you can do the following:
           }
           ... on StrapiComponentImage {
             image {
+              uri # remote url in strapi
               file {
-                publicURL
+                publicURL # local downloaded url
               }
             }
           }

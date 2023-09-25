@@ -160,14 +160,14 @@ const extractFiles = (text, apiURL) => {
 };
 
 const processFieldData = async (data, options) => {
-  const { pluginOptions, nodeId, createNode, createNodeId, getCache } = options || {};
+  const { pluginOptions, nodeId, createNode, createNodeId, getCache, uploadFileMap } = options || {};
   const apiURL = pluginOptions?.apiURL;
   const inlineImages = pluginOptions?.inlineImages?.typesToParse;
   const __typename = data?.__typename;
   const output = JSON.parse(JSON.stringify(data));
 
   // Extract files and download.
-  if (__typename === 'UploadFile' && data.url) {
+  if (Boolean(pluginOptions?.download) && __typename === 'UploadFile' && data.url) {
     const url = /^\//.test(data.url) ? `${apiURL}${data.url}` : data.url;
     const fileNode = await createRemoteFileNode({
       url,
@@ -186,20 +186,27 @@ const processFieldData = async (data, options) => {
     await Promise.all((inlineImages[__typename] || []).map(async field => {
       const files = extractFiles(data[field], apiURL);
       if (files?.length) {
-        await Promise.all(files.map(async (url, index) => {
-          const fileNode = await createRemoteFileNode({
-            url,
-            parentNodeId: nodeId,
-            createNode,
-            createNodeId,
-            getCache,
-          });
-          if (fileNode) {
-            if (!output?.[`${field}_images`]) {
-              output[`${field}_images`] = [];
+        await Promise.all(files.map(async (uri, index) => {
+          const url = uri.replace(apiURL, '').split('#')[0].split('?')[0]; // lookup can only find file nodes without applied styles (#xxx).
+          const nodeId = uploadFileMap[url];
+          let file;
+          if (!nodeId && Boolean(pluginOptions?.download)) {
+            const fileNode = await createRemoteFileNode({
+              url: uri,
+              parentNodeId: nodeId,
+              createNode,
+              createNodeId,
+              getCache,
+              httpHeaders: pluginOptions.headers || {},
+            });
+            if (fileNode) {
+              file = fileNode.id;
             }
-            output[`${field}_images`][index] = fileNode.id;
           }
+          if (!output?.[`${field}_images`]) {
+            output[`${field}_images`] = [];
+          }
+          output[`${field}_images`][index] = { uri, nodeId, ...file && { file } };
         }));
       }
     }));

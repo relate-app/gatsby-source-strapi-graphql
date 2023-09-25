@@ -97,13 +97,13 @@ const getTypeDefs = (typeNames, typeMap, schema, entityTypeMap, inlineImages) =>
               return {
                 ...acc,
                 [`${field}_images`]: {
-                  type: '[File]',
+                  type: '[StrapiUploadFile]',
                   resolve: async (source, _, context) => {
-                    const fileIds = source?.[`${field}_images`] || [];
-                    return context.nodeModel.getNodesByIds({
-                      ids: fileIds,
-                      type: 'File',
-                    });
+                    const files = source?.[`${field}_images`] || [];
+                    return files.map(file => ({
+                      ...file?.nodeId && context.nodeModel.getNodeById({ id: file.nodeId, type: 'StrapiUploadFile' }),
+                      ...file,
+                    }));
                   },
                 },
               }
