@@ -65,10 +65,12 @@ exports.sourceNodes = async ({
 
       await Promise.all([(async () => {
         if (lastFetched) {
-          const { updatedAt, ...syncVariables } = variables;
           const syncResult = await client.query({
             query: syncQuery,
-            variables: syncVariables,
+            variables: {
+              ...variables,
+              updatedAt: "1990-01-01T00:00:00.000Z",
+            },
             fetchPolicy: 'network-only',
           });
           let nodes = syncResult?.data?.[field.name]?.data || [];
@@ -116,6 +118,8 @@ exports.sourceNodes = async ({
   // Get upload files first to build uploadFilesMap.
   await Promise.all(operations.filter(o => o.operationName === 'UploadFileQuery').map(executeOperation));
   await Promise.all(operations.filter(o => o.operationName !== 'UploadFileQuery').map(executeOperation));
+
+  console.log(nodesToDelete);
 
   // Delete nodes not found anymore.
   nodesToDelete.forEach(nodeId => {

@@ -244,7 +244,7 @@ const processFieldData = async (data, options) => {
           if (!output?.[`${field}_images`]) {
             output[`${field}_images`] = [];
           }
-          output[`${field}_images`][index] = { uri, nodeId, ...file && { file } };
+          output[`${field}_images`][index] = { uri, url, nodeId, ...file && { file } };
         }));
       }
     }));
