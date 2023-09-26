@@ -119,8 +119,6 @@ exports.sourceNodes = async ({
   await Promise.all(operations.filter(o => o.operationName === 'UploadFileQuery').map(executeOperation));
   await Promise.all(operations.filter(o => o.operationName !== 'UploadFileQuery').map(executeOperation));
 
-  console.log(nodesToDelete);
-
   // Delete nodes not found anymore.
   nodesToDelete.forEach(nodeId => {
     const node = getNode(nodeId);
