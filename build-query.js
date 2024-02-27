@@ -15,9 +15,6 @@ const buildArgs = node => {
   if (node?.args?.find(arg => arg.name === 'pagination')) {
     args.push('pagination:{limit:1000}');
   }
-  if (node?.args?.find(arg => arg.name === 'publicationState')) {
-    args.push('publicationState: $publicationState');
-  }
   return args.length ? `(${args.join(',')})` : '';
 }
 
@@ -117,12 +114,11 @@ const getNodeFields = (node, typesMap, n = 0, root = false) => {
   return null;
 };
 
-const buildQueries = (operations, typesMap) => {
+const buildQueries = (operations, typesMap, pluginOptions) => {
   return operations.map(operation => {
     const isCollectionType = operation?.collectionType;
     const operationName = `${operation.collectionType || operation.singleType}Query`;
     const publicationState = Boolean(operation.field.args.find(arg => arg.name === 'publicationState'));
-    const publicationStateDef = operation.query.includes('$publicationState');
     const locale = Boolean(operation.field.args.find(arg => arg.name === 'locale'));
     const localeDef = operation.query.includes('$locale');
     const filterInputType = typesMap?.[operation.field.args.find(arg => arg.name === 'filters')?.type?.name];
@@ -130,19 +126,17 @@ const buildQueries = (operations, typesMap) => {
     const updatedAtDef = operation.query.includes('$updatedAt');
     const varDef = [
       isCollectionType && '$pagination: PaginationArg',
-      (publicationState || publicationStateDef) && '$publicationState: PublicationState',
       (locale || localeDef) && '$locale: I18NLocaleCode',
       (updatedAt || updatedAtDef) && '$updatedAt: DateTime',
     ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const varSet = [
       isCollectionType && 'pagination: $pagination',
-      publicationState && 'publicationState: $publicationState',
+      publicationState && pluginOptions?.preview && `publicationState: PREVIEW`,
       locale && 'locale: $locale',
       updatedAt && 'filters: { updatedAt: { gt: $updatedAt } }',
     ].filter(n => Boolean(n)).join(' ').replace(/(.+)/, '($1)');
     const variables = {
       ...isCollectionType && { pagination: { start: 0, limit: 1000 } },
-      ...(publicationState || publicationStateDef) && { publicationState: 'LIVE' },
       ...(locale || localeDef) && { locale: operation.locale },
       ...(updatedAt || updatedAtDef) && { updatedAt: "1990-01-01T00:00:00.000Z" },
     };
@@ -199,5 +193,5 @@ module.exports = async pluginOptions => {
   const typesMap = await getTypesMap(pluginOptions);
   const locales = await getLocales(pluginOptions);
   const fields = getQueryFields(singleTypeMap, collectionTypeMap, typesMap, locales);
-  return buildQueries(fields, typesMap);
+  return buildQueries(fields, typesMap, pluginOptions);
 };
